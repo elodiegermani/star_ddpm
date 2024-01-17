@@ -80,7 +80,7 @@ class DDPM(nn.Module):
         context_mask = torch.bernoulli(torch.zeros_like(torch.argmax(c, dim=1))+self.drop_prob).to(self.device)
 
         c_bis = torch.zeros_like(c)
-        c_bis_val = random.sample(range(c_bis.shape[1]),c_bis.shape[0])
+        c_bis_val = np.choice(range(c_bis.shape[1]),c_bis.shape[0])
 
         for i in range(c_bis.shape[0]):
             c_bis[i, c_bis_val[i]] = 1
