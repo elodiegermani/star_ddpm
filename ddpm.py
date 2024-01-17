@@ -85,9 +85,10 @@ class DDPM(nn.Module):
         for i in range(c_bis.shape[0]):
             c_bis[i, c_bis_val[i]] = 1
         
-        # return MSE between added noise, and our predicted noise
+        # classic mse-loss
+        # predict noise of noisy image + image real condition
         x_c = self.nn_model(x_t, c, _ts / self.n_T, context_mask)
-        loss_mse =  self.loss_mse(noise, x_i)
+        loss_mse =  self.loss_mse(noise, x_c)
 
 
         # cyclic-loss
@@ -100,7 +101,7 @@ class DDPM(nn.Module):
             + self.sqrtmab.to(self.device)[_ts, None, None, None, None] * x_cbis
         )
 
-        # learn to denoise with real condition
+        # predict noise of new noisy image + image real condition
         x_cbis_c = self.nn_model(x_tbis, c, _ts / self.n_T, context_mask)
         
         loss_cycle = self.loss_mse(noise, x_cbis_c)
