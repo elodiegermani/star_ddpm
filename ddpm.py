@@ -106,7 +106,7 @@ class DDPM(nn.Module):
         
         loss_cycle = self.loss_mse(noise, x_cbis_c)
 
-        loss = loss_mse + loss_cycle 
+        loss = 0.5 * loss_mse + 0.5 * loss_cycle 
     
         return loss
 
