@@ -90,7 +90,6 @@ class DDPM(nn.Module):
         x_c = self.nn_model(x_t, c, _ts / self.n_T, context_mask)
         loss_mse =  self.loss_mse(noise, x_c)
 
-
         # cyclic-loss
         # predict noise of noisy image + other condition
         x_cbis = self.nn_model(x_t, c_bis, _ts / self.n_T, context_mask)
@@ -106,7 +105,7 @@ class DDPM(nn.Module):
         
         loss_cycle = self.loss_mse(noise, x_cbis_c)
 
-        loss = 0.5 * loss_mse + 0.5 * loss_cycle 
+        loss = loss_mse + 0.5 * loss_cycle 
     
         return loss
 
