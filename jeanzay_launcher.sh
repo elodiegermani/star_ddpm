@@ -18,6 +18,6 @@ source /gpfswork/rech/gft/umh25bv/miniconda3/bin/activate /gpfswork/rech/gft/umh
 # --save_dir models-2classes-2 --test_iter 490 --n_classes 2
 
 /gpfswork/rech/gft/umh25bv/miniconda3/envs/workEnv/bin/python3 -u /gpfswork/rech/gft/umh25bv/star_ddpm/main.py \
-   --mode train --dataset dataset_rh_2class_30grp-jeanzay --labels pipelines \
+   --mode train --dataset dataset_rh_2class-jeanzay --labels pipelines \
    --batch_size 4 --data_dir data --n_classes 2\
-   --n_epoch 500 --lrate 1e-5 --sample_dir samples-2classes --save_dir models-2classes
+   --n_epoch 200 --lrate 1e-5 --sample_dir samples-2classes --save_dir models-2classes
