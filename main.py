@@ -316,14 +316,6 @@ def transfer(config):
         shuffle=False, 
         )
 
-    # x,c = next(iter(source_loader))
-
-    # x_r,c_r = next(iter(target_loader))
-
-    df_metrics = pd.DataFrame(
-            columns = ['orig_label', 'target_label', 'orig-target', 'orig-gen', 'gen-target', 'w']
-            )
-
     for n, (x, c) in enumerate(source_loader):
 
         ddpm.eval()
@@ -377,73 +369,10 @@ def transfer(config):
                     c_idx = torch.argmax(c, dim=1)[0]
                     c_t_idx = torch.argmax(c_t, dim=1)[0]
 
-                    if n % 50 == 0:
 
-                        nib.save(img_xgen, f'{config.sample_dir}/gen-image_{n}-{config.dataset}_ep{config.test_iter}_w{w}-orig_{c_idx}-target_{c_t_idx}.nii.gz')
-                        nib.save(img_xreal, f'{config.sample_dir}/trg-image_{n}-{config.dataset}_ep{config.test_iter}_w{w}-orig_{c_idx}-target_{c_t_idx}.nii.gz')
-                        nib.save(img_xsrc, f'{config.sample_dir}/src-image_{n}-{config.dataset}_ep{config.test_iter}_w{w}-orig_{c_idx}-target_{c_t_idx}.nii.gz')
-
-
-                    corr_orig_target = get_correlation(img_xsrc, img_xreal)
-                    corr_orig_gen = get_correlation(img_xsrc, img_xgen)
-                    corr_gen_target = get_correlation(img_xgen, img_xreal)
-
-                    classe_orig = class_change(config.model_param, x)
-                    classe_target = class_change(config.model_param, x_r)
-                    classe_gen = class_change(config.model_param, x_gen)
-
-                    df_img = pd.DataFrame({
-                        'orig_label': [c_idx],
-                        'target_label': [c_t_idx],
-                        'orig-target': [corr_orig_target],
-                        'orig-gen': [corr_orig_gen],
-                        'gen-target': [corr_gen_target],
-                        'gen_pred':[classe_gen],
-                        'orig_pred':[classe_orig],
-                        'target_pred':[classe_target],
-                        'w':[w]
-                        })
-
-                    df_metrics = pd.concat(
-                        [df_metrics, df_img], 
-                        ignore_index=True
-                        ) 
-
-                    print(df_metrics)
-
-                    df_metrics.to_csv(f'{config.sample_dir}/df_metrics-{config.dataset}.csv')
-
-                    # if n%50==0:
-
-                    #     plotting.plot_glass_brain(
-                    #         img_xsrc, 
-                    #         figure=fig, 
-                    #         cmap=nilearn_cmaps['cold_hot'], 
-                    #         plot_abs=False, 
-                    #         title=f'Original, classe {dataset.label_list[c_idx]}',
-                    #         axes=ax[0],
-                    #         display_mode = 'z')
-
-                    #     plotting.plot_glass_brain(
-                    #         img_xgen, 
-                    #         figure=fig, 
-                    #         cmap=nilearn_cmaps['cold_hot'], 
-                    #         plot_abs=False, 
-                    #         title=f'Generated, classe {dataset.label_list[c_t_idx]}',
-                    #         axes=ax[1],
-                    #         display_mode = 'z')
-
-                    #     plotting.plot_glass_brain(
-                    #         img_xreal, 
-                    #         figure=fig, 
-                    #         cmap=nilearn_cmaps['cold_hot'], 
-                    #         plot_abs=False, 
-                    #         title=f'Target, classe {dataset.label_list[c_t_idx]}',
-                    #         axes=ax[2],
-                    #         display_mode = 'z')
-
-                    #     plt.savefig(f'{config.sample_dir}/test-image_{n}-{config.dataset}_ep{config.test_iter}_w{w}-orig_{c_idx}-target_{c_t_idx}.png')
-                    #     plt.close()
+                    nib.save(img_xgen, f'{config.sample_dir}/gen-image_{n}-{config.dataset}_ep{config.test_iter}_w{w}-orig_{c_idx}-target_{c_t_idx}.nii.gz')
+                    nib.save(img_xreal, f'{config.sample_dir}/trg-image_{n}-{config.dataset}_ep{config.test_iter}_w{w}-orig_{c_idx}-target_{c_t_idx}.nii.gz')
+                    nib.save(img_xsrc, f'{config.sample_dir}/src-image_{n}-{config.dataset}_ep{config.test_iter}_w{w}-orig_{c_idx}-target_{c_t_idx}.nii.gz')
 
         
 if __name__ == "__main__":
@@ -465,7 +394,7 @@ if __name__ == "__main__":
     parser.add_argument('--beta', type=tuple, default=(1e-4, 0.02), help='number of classes')
     parser.add_argument('--n_T', type=int, default=500, help='number T')
     parser.add_argument('--drop_prob', type=float, default=0.1, help='probability drop')
-    parser.add_argument('--ws_test', type=list, default=[0, 1.0], help='weight strengh for sampling')
+    parser.add_argument('--ws_test', type=list, default=[0, 1.0, 2.0], help='weight strengh for sampling')
     parser.add_argument('--test_iter', type=int, default=10, help='epoch of model to test')
     parser.add_argument('--model_param', type=str, default='../pipeline_classification/data/derived/model_b-64_lr-1e-04_epochs_100.pt', 
         help='epoch of model to test')
