@@ -78,12 +78,6 @@ class DDPM(nn.Module):
         # dropout context with some probability
         ## context_mask = tensor of size n. image with 0/1 if drop context.
         context_mask = torch.bernoulli(torch.zeros_like(torch.argmax(c, dim=1))+self.drop_prob).to(self.device)
-
-        c_bis = torch.zeros_like(c)
-        c_bis_val = np.random.choice(range(c_bis.shape[1]),c_bis.shape[0])
-
-        for i in range(c_bis.shape[0]):
-            c_bis[i, c_bis_val[i]] = 1
         
         # classic mse-loss
         # predict noise of noisy image + image real condition
@@ -91,6 +85,12 @@ class DDPM(nn.Module):
         loss_mse =  self.loss_mse(noise, x_c)
 
         # cyclic-loss
+        c_bis = torch.zeros_like(c)
+        c_bis_val = np.random.choice(range(c_bis.shape[1]),c_bis.shape[0])
+
+        for i in range(c_bis.shape[0]):
+            c_bis[i, c_bis_val[i]] = 1
+
         # predict noise of noisy image + other condition
         x_cbis = self.nn_model(x_t, c_bis, _ts / self.n_T, context_mask)
 
@@ -102,8 +102,14 @@ class DDPM(nn.Module):
 
         # predict noise of new noisy image + image real condition
         x_cbis_c = self.nn_model(x_tbis, c, _ts / self.n_T, context_mask)
+
+        # Reconstruct X
+        x_tbis_c = x_t = (
+                self.oneover_sqrta[i] * (x_t - x_cbis_c * self.mab_over_sqrtmab[i])
+                + self.sqrt_beta_t[i] * noise
+            ) 
         
-        loss_cycle = self.loss_mse(noise, x_cbis_c)
+        loss_cycle = self.loss_mse(x_t, x_tbis_c)
 
         loss = loss_mse + 0.5 * loss_cycle 
     
@@ -162,7 +168,7 @@ class DDPM(nn.Module):
         x_i_store = np.array(x_i_store)
         return x_i, x_i_store
 
-    def transfer(self, source, c_t, guide_w = 0.0):
+    def transfer(self, source, c_t, guide_w=0):
         # we follow the guidance sampling scheme described in 'Classifier-Free Diffusion Guidance'
         # to make the fwd passes efficient, we concat two versions of the dataset,
         # one with context_mask=0 and the other context_mask=1
@@ -202,14 +208,15 @@ class DDPM(nn.Module):
             ct_vect = nn.functional.one_hot(c_t, num_classes=self.n_classes).to(self.device)  
 
             eps = self.nn_model(x_t.float(), ct_vect.float(), t_is.float(), context_mask.float())
+
             eps1 = eps[:1] # first part (context_mask = 0)
             eps2 = eps[1:] # second part (context_mask = 1)
-            eps = (1+guide_w)*eps1 - guide_w*eps2 # mix output: context mask off and context mask on
+            eps = (1+w)*eps1 - w*eps2 # mix output: context mask off and context mask on
             x_t = x_t[0:1] # Keep half of the samples 
 
             x_t = (
                 self.oneover_sqrta[i] * (x_t - eps * self.mab_over_sqrtmab[i])
                 + self.sqrt_beta_t[i] * z
             ) 
-        
+
         return x_t
