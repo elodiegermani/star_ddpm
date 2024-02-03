@@ -211,7 +211,7 @@ class DDPM(nn.Module):
 
             eps1 = eps[:1] # first part (context_mask = 0)
             eps2 = eps[1:] # second part (context_mask = 1)
-            eps = (1+w)*eps1 - w*eps2 # mix output: context mask off and context mask on
+            eps = (1+guide_w)*eps1 - guide_w*eps2 # mix output: context mask off and context mask on
             x_t = x_t[0:1] # Keep half of the samples 
 
             x_t = (
